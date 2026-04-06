@@ -1,0 +1,4 @@
+{"message": {"role": "user", "content": "first message in string format"}, "timestamp": "2026-04-06T14:00:00Z"}
+{"message": {"role": "user", "content": [{"type": "text", "text": "second message in list format \u2014 should be captured"}]}, "timestamp": "2026-04-06T14:00:10Z"}
+{"message": {"role": "user", "content": [{"type": "tool_result", "tool_use_id": "tu_x", "content": "some result"}]}, "timestamp": "2026-04-06T14:00:20Z"}
+{"message": {"role": "user", "content": [{"type": "text", "text": "third message with mixed content"}, {"type": "tool_result", "tool_use_id": "tu_y", "content": "another result"}]}, "timestamp": "2026-04-06T14:00:30Z"}

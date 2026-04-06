@@ -18,13 +18,17 @@ from collections import Counter, defaultdict
 from pathlib import Path
 from datetime import datetime
 
-# Approximate pricing per million tokens (Claude Opus 4.6, March 2026)
+# Approximate pricing per million tokens (Claude Opus 4.6)
+# Update these when Anthropic changes pricing and bump PRICING_LAST_VERIFIED.
+PRICING_LAST_VERIFIED = "2026-04-06"
 PRICE_PER_M = {
     "input": 15.0,
     "output": 75.0,
     "cache_create": 18.75,  # 1.25x input
     "cache_read": 1.50,     # 0.1x input
 }
+
+SCHEMA_VERSION = "0.1.0"
 
 # Head/tail buffer size for lite reads (matches Claude Code's LITE_READ_BUF_SIZE)
 LITE_READ_BUF_SIZE = 65536
@@ -311,32 +315,43 @@ def extract_all_streaming(jsonl_path, subagents_dir=None, summary_mode=False):
                     if tool_use_id:
                         tool_result_sizes[tool_use_id] = size_bytes
 
-                # Text blocks — conversation arc
+                # Text blocks — conversation arc (both assistant AND user)
                 elif block_type == "text":
                     text = block.get("text", "").strip()
                     if role == "assistant" and text and len(text) > 20:
                         arc.append({
                             "role": "assistant",
-                            "text": text[:300],
+                            "text": text[:1000],
                             "timestamp": ts,
                         })
 
-        # User messages for conversation arc
+            # After processing all blocks in a list-format user message,
+            # collect text blocks into the arc
+            if role == "user" and isinstance(content, list):
+                user_text = ""
+                for block in content:
+                    if isinstance(block, dict) and block.get("type") == "text":
+                        user_text += block.get("text", "")
+                    elif isinstance(block, str):
+                        user_text += block
+                user_text = user_text.strip()
+                if user_text and not user_text.startswith("<system-reminder>"):
+                    arc.append({
+                        "role": "user",
+                        "text": user_text[:2000],
+                        "timestamp": ts,
+                    })
+
+        # User messages with string content (simple format)
         elif role == "user":
             text = ""
             if isinstance(content, str):
                 text = content
-            elif isinstance(content, list):
-                for block in content:
-                    if isinstance(block, dict) and block.get("type") == "text":
-                        text += block.get("text", "")
-                    elif isinstance(block, str):
-                        text += block
             text = text.strip()
             if text and not text.startswith("<system-reminder>"):
                 arc.append({
                     "role": "user",
-                    "text": text[:500],
+                    "text": text[:2000],
                     "timestamp": ts,
                 })
 
@@ -389,8 +404,17 @@ def extract_all_streaming(jsonl_path, subagents_dir=None, summary_mode=False):
         for c in tool_calls if c["name"] == "Skill"
     ]
 
+    # Warn if agents exist but have no cost data (subagents_dir missing)
+    agents_without_cost = [a for a in agents if a.get("estimated_cost_usd") is None
+                           and a.get("description") and not a.get("description", "").startswith("[unmatched")]
+    if agents_without_cost:
+        print(f"Warning: {len(agents_without_cost)} agent dispatch(es) have no subagent cost data. "
+              f"Pass --subagents-dir <path> to attribute subagent costs.",
+              file=sys.stderr)
+
     # Build result
     result = {
+        "schema_version": SCHEMA_VERSION,
         "session": session,
         "tokens": {
             "total": tokens_total,
