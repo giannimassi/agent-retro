@@ -36,7 +36,7 @@ ls -t ~/.claude/projects/<encoded-cwd>/*.jsonl | head -3
 
 **Step C: Verify you have the right file.** Use `--metadata-only` for cheap verification — it reads only the first/last 64KB of the file (no full parse):
 ```bash
-python3 ${CLAUDE_PLUGIN_ROOT}/skills/retro/scripts/extract.py <candidate.jsonl> --metadata-only
+python3 ${CLAUDE_SKILL_DIR}/scripts/extract.py <candidate.jsonl> --metadata-only
 ```
 
 This returns session_id, cwd, git_branch, first_prompt, timestamps, and file size. Check `first_prompt` matches what was said at the start of the conversation.
@@ -46,7 +46,7 @@ If it doesn't match, try the next most recent file. If none match, state this in
 ### Run extraction
 
 ```bash
-python3 ${CLAUDE_PLUGIN_ROOT}/skills/retro/scripts/extract.py <path-to-session.jsonl> --summary
+python3 ${CLAUDE_SKILL_DIR}/scripts/extract.py <path-to-session.jsonl> --summary
 ```
 
 Use `--summary` to get compact output (tool counts only, no individual call listings). If you need to drill into specific tool calls later, re-run without `--summary`.
