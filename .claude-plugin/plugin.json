@@ -1,0 +1,12 @@
+{
+  "name": "retro",
+  "description": "Session retrospective skill for Claude Code — analyze conversations end-to-end, identify friction patterns, and propose concrete improvements to skills, rules, and workflows",
+  "version": "0.1.0",
+  "author": {
+    "name": "Gianni Massi",
+    "url": "https://github.com/giannimassi"
+  },
+  "license": "MIT",
+  "homepage": "https://github.com/giannimassi/claude-code-retro",
+  "repository": "https://github.com/giannimassi/claude-code-retro"
+}
