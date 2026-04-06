@@ -4,7 +4,7 @@
 
 Most agent reflection happens inline — a critic agent reviews output before it's returned, or a retry loop generates reflections on failed attempts (see [Reflexion](https://arxiv.org/abs/2303.11366)). These patterns improve single-task success rates.
 
-`/retro` does something different: it looks at an **entire session** after the fact. The goal isn't "make this one task succeed" — it's "find systemic patterns across the session that indicate my setup (skills, rules, CLAUDE.md, workflows) needs to change."
+`/agent-retro` does something different: it looks at an **entire session** after the fact. The goal isn't "make this one task succeed" — it's "find systemic patterns across the session that indicate my setup (skills, rules, CLAUDE.md, workflows) needs to change."
 
 Inline reflection can't do this because:
 - It only sees one task at a time
@@ -18,7 +18,7 @@ The extraction script keeps every user message and assistant text response. No s
 
 We considered arc sampling (keep first 5, last 10, every Nth in between) but rejected it because:
 - **Friction detection requires continuity.** A user correction only makes sense in the context of what Claude just said. Skip the wrong turn and you miss the cause.
-- **Retros are high-value, low-frequency.** You run `/retro` maybe once per session, not every turn. Spending 20KB of context on the arc is a reasonable trade-off for a $5-50 session.
+- **Retros are high-value, low-frequency.** You run `/agent-retro` maybe once per session, not every turn. Spending 20KB of context on the arc is a reasonable trade-off for a $5-50 session.
 - **The rest of the extraction is lean.** Tool result content (the actual 45KB file reads, command outputs) is excluded entirely. The arc is the biggest piece of the extraction at ~68% of output, but the total output is still only ~3-4% of the raw JSONL file.
 
 ## Why track tool result sizes without content?
@@ -44,11 +44,11 @@ The streaming extraction (`stream_jsonl`) processes records one at a time, match
 
 The Reflexion paper introduced "verbal reinforcement learning" — agents store natural-language self-reflections in an episodic memory buffer and use them to improve on retry. The key insight: reflections as text, not weights.
 
-`/retro` extends this from "reflect on one failed task" to "reflect on an entire session." The reflections aren't used for retry — they're used to improve the system configuration (skills, rules, CLAUDE.md) so that future sessions start from a better baseline.
+`/agent-retro` extends this from "reflect on one failed task" to "reflect on an entire session." The reflections aren't used for retry — they're used to improve the system configuration (skills, rules, CLAUDE.md) so that future sessions start from a better baseline.
 
 ## Comparison with existing tools
 
-| Tool | What it does | What /retro adds |
+| Tool | What it does | What /agent-retro adds |
 |---|---|---|
 | **Reflexion** | Inline retry reflection (one task) | Post-session systemic reflection (entire conversation) |
 | **LangGraph reflection** | Generator-critic loop during execution | Root cause analysis across the full session |
@@ -57,4 +57,4 @@ The Reflexion paper introduced "verbal reinforcement learning" — agents store 
 | **Vibe-Log** | Standup summaries of accomplishments | "What went wrong and why" with proposed fixes |
 | **claude-devtools** | Execution tree viewer | Actionable proposals, not just observability |
 
-These tools are complementary, not competing. Continuous-learning is the always-on immune system; `/retro` is the periodic health checkup.
+These tools are complementary, not competing. Continuous-learning is the always-on immune system; `/agent-retro` is the periodic health checkup.
