@@ -1,0 +1,4 @@
+interface:
+  display_name: "Agent Retro"
+  short_description: "Review agent sessions and propose improvements"
+  default_prompt: "Run a retrospective on this session and tell me what worked, what did not, and what to improve."
