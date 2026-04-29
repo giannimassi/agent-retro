@@ -243,3 +243,40 @@ For actions the user approves:
 - **setup-change**: apply the config change
 
 Update the retro file's action table as you go (proposed -> done / deferred / rejected).
+
+## Step 9: Preemptive Handoff Recommendation
+
+If session stats exceed ANY of these thresholds:
+- **500+ turns** (`tokens.turn_count` from extraction)
+- **4h+ wall-clock** (`session.duration_seconds` > 14400)
+- **$300+ estimated cost** (`tokens.estimated_cost_usd`)
+
+...the retro MUST include a specific action flagged as high-priority:
+
+> "Consider fresh-session handoff next time. Long sessions accumulate context overhead — 247M cache reads and 7.7M cache writes for every new turn compound quickly. A fresh session with a targeted resume-prompt is cheaper and keeps reasoning cleaner."
+
+Include **two concrete prompts** in the retro file itself:
+
+### Prompt A: `/compact` preserve (if user keeps going in same session)
+```
+Preserve for the continued session:
+- Active project + state summary
+- Non-negotiable invariants (things NOT to rederive)
+- Immediate next steps
+- User preferences/posture (auto mode on/off, skill patterns, etc.)
+```
+
+### Prompt B: `/clear` resume (fresh session)
+```
+Resume <project>. Load in order before doing anything:
+1. <primary design doc path>
+2. <key knowledge files>
+3. <state commands to run>
+Do NOT rederive: <list of settled decisions>.
+Pick up at: <next specific step>.
+Posture: <auto mode? terse? ask-before-act?>
+```
+
+Fill both prompts with session-specific content drawn from the evolution doc, specs, and user voice excerpts. Offer the user both options at the end of the walk-through — copy-paste ready.
+
+**Why both**: sometimes the user wants to keep momentum (compact); sometimes a hard reset is cleaner (clear). Don't pick for them.
